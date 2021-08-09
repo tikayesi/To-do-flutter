@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_flutter/model/to_do.dart';
+import 'package:to_do_flutter/repository/todo_repository.dart';
+import 'package:to_do_flutter/screen/to_do_detail_screen.dart';
 
 class ToDoScreen extends StatefulWidget {
   const ToDoScreen({Key? key}) : super(key: key);
@@ -8,31 +11,11 @@ class ToDoScreen extends StatefulWidget {
 }
 
 class _ToDoScreenState extends State<ToDoScreen> {
-  List<String> todos = [];
+  ToDoRepository _toDoRepository = ToDoRepository();
   TextEditingController todoName = new TextEditingController();
+  TextEditingController toDoDescription = new TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  Widget listToDo() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: todos.map((e) => new Text(e)).toList(),
-      ),
-    );
-  }
-
-  addTodo() {
-    setState(() {
-      todos.add(todoName.text);
-    });
-  }
-
-  deleteToDo(String name) {
-    setState(() {
-      todos.removeWhere((element) => 
-      element == name);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,12 +43,27 @@ class _ToDoScreenState extends State<ToDoScreen> {
                         return null;
                       },
                     ),
+                     TextFormField(
+                      decoration: InputDecoration(hintText: 'Enter Your Description'),
+                      controller: toDoDescription,
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your description';
+                        }
+                        return null;
+                      },
+                    ),
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              addTodo();
+                              setState(() {
+                                 _toDoRepository.addTodo(
+                                   new ToDo(_toDoRepository.getListToDo().length+1,
+                                    todoName.text, toDoDescription.text));
+                              });
+
                             }
                           },
                           child: const Text('Submit')),
@@ -78,7 +76,7 @@ class _ToDoScreenState extends State<ToDoScreen> {
             margin: EdgeInsets.fromLTRB(20, 30, 20, 0),
             child: Scrollbar(
               child: ListView.builder(
-                  itemCount: todos.length,
+                  itemCount: _toDoRepository.getListToDo().length,
                   padding: EdgeInsets.all(8),
                   itemBuilder: (context, index) {
                     return Column(
@@ -90,11 +88,20 @@ class _ToDoScreenState extends State<ToDoScreen> {
                                 Icons.access_alarms,
                                 size: 40.0,
                               ),
-                              title: Text(todos[index]),
+                              title: Text(_toDoRepository.getListToDo()[index].todo),
+                              onTap: (){
+                                Navigator.push(context, MaterialPageRoute(builder: 
+                                (context) => ToDoDetailScreen()));
+                              },
                             ))
                             ,
                             Expanded(child: TextButton(onPressed:
-                             () => deleteToDo(todos[index]),
+                             (){
+                               setState(() {
+                                 _toDoRepository.deleteToDo(
+                                   _toDoRepository.getListToDo()[index].id);
+                               });
+                             } ,
                             child: Icon(Icons.delete),))
                           ],
                         )
