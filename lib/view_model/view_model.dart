@@ -16,4 +16,11 @@ class ViewModel with ChangeNotifier{
     _book = newBook;
     notifyListeners();
   }
+
+  addBook(Book newBook)async{
+      final newBookRegistered = await _bookRepository.addBook(newBook);
+      print(newBookRegistered);
+      notifyListeners();
+  }
+
 }
